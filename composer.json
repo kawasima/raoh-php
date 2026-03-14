@@ -1,0 +1,48 @@
+{
+    "name": "unit8/raoh",
+    "description": "Parse Don't Validate \u2014 composable decoder library for PHP 8.2+",
+    "type": "library",
+    "license": "Apache-2.0",
+    "homepage": "https://github.com/kawasima/raoh-php",
+    "authors": [
+        {
+            "name": "kawasima",
+            "email": "kawasima1016@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "keywords": [
+        "parse-dont-validate",
+        "decoder",
+        "validation",
+        "result-type",
+        "error-accumulation",
+        "functional",
+        "combinator"
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Raoh\\": "src/"
+        },
+        "files": [
+            "src/Boundary/Array_/functions.php",
+            "src/Boundary/Json/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Raoh\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "./vendor/bin/phpstan analyse --memory-limit=512M"
+    }
+}
