@@ -173,9 +173,23 @@ class ArrayDecodersTest extends TestCase
         $this->assertSame('required', $r->issues->toArray()[0]->code);
     }
 
-    public function testEnumOfNonBackedEnumThrows(): void
+    public function testEnumOfPureEnumValid(): void
+    {
+        $r = enum_of(\Raoh\Tests\Fixtures\Color::class)->decode('Red');
+        $this->assertInstanceOf(Ok::class, $r);
+        $this->assertSame(\Raoh\Tests\Fixtures\Color::Red, $r->value);
+    }
+
+    public function testEnumOfPureEnumInvalid(): void
+    {
+        $r = enum_of(\Raoh\Tests\Fixtures\Color::class)->decode('Green');
+        $this->assertInstanceOf(Err::class, $r);
+        $this->assertSame('invalid_value', $r->issues->toArray()[0]->code);
+    }
+
+    public function testEnumOfNotEnumThrows(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        enum_of(\Raoh\Tests\Fixtures\Color::class);
+        enum_of(\stdClass::class);
     }
 }

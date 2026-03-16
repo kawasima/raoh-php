@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain;
 
-enum DeliveryAvailability
+enum DeliveryAvailability: string
 {
-    case WeekdaysOnly;
-    case AllDays;
+    case WeekdaysOnly = 'weekdays_only';
+    case AllDays = 'all_days';
 }

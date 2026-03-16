@@ -273,33 +273,52 @@ final class ArrayDecoders
     }
 
     /**
-     * Decode a PHP BackedEnum from its backing value.
+     * Decode a PHP enum from input.
      *
-     * @template T of \BackedEnum
+     * - BackedEnum: matched by backing value (string or int)
+     * - Pure enum: matched by case name (string)
+     *
+     * @template T of \UnitEnum
      * @param class-string<T> $enumClass
      * @return Decoder<mixed, T>
      */
     public static function enumOf(string $enumClass): Decoder
     {
-        if (!is_subclass_of($enumClass, \BackedEnum::class)) {
-            throw new \InvalidArgumentException("{$enumClass} is not a BackedEnum");
+        if (!is_subclass_of($enumClass, \UnitEnum::class)) {
+            throw new \InvalidArgumentException("{$enumClass} is not an enum");
         }
-        return CallableDecoder::of(function (mixed $in, ?Path $path = null) use ($enumClass): Result {
+
+        if (is_subclass_of($enumClass, \BackedEnum::class)) {
+            return CallableDecoder::of(function (mixed $in, ?Path $path = null) use ($enumClass): Result {
+                $p = $path ?? Path::root();
+                if ($in === null) {
+                    return Result::fail($p, ErrorCodes::Required->value, 'is required');
+                }
+                try {
+                    return Result::ok($enumClass::from($in));
+                } catch (\ValueError) {
+                    return Result::fail($p, ErrorCodes::InvalidValue->value, 'invalid value', ['actual' => $in]);
+                }
+            });
+        }
+
+        /** @var array<string, T> $lookup */
+        $lookup = [];
+        foreach ($enumClass::cases() as $case) {
+            $lookup[$case->name] = $case;
+        }
+        return CallableDecoder::of(function (mixed $in, ?Path $path = null) use ($lookup): Result {
             $p = $path ?? Path::root();
             if ($in === null) {
                 return Result::fail($p, ErrorCodes::Required->value, 'is required');
             }
-            try {
-                $case = $enumClass::from($in);
-                return Result::ok($case);
-            } catch (\ValueError) {
-                return Result::fail(
-                    $p,
-                    ErrorCodes::InvalidValue->value,
-                    'invalid value',
-                    ['actual' => $in],
-                );
+            if (!is_string($in)) {
+                return Result::fail($p, ErrorCodes::TypeMismatch->value, 'must be a string');
             }
+            if (isset($lookup[$in])) {
+                return Result::ok($lookup[$in]);
+            }
+            return Result::fail($p, ErrorCodes::InvalidValue->value, 'invalid value', ['actual' => $in]);
         });
     }
 

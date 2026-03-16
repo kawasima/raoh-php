@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain;
 
-enum DeliveryArea
+enum DeliveryArea: string
 {
-    case DomesticOnly;
-    case International;
+    case DomesticOnly = 'domestic_only';
+    case International = 'international';
 }

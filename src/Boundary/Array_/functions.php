@@ -108,7 +108,7 @@ function combine(Decoder ...$decoders): Combiner
 }
 
 /**
- * @template T of \BackedEnum
+ * @template T of \UnitEnum
  * @param class-string<T> $enumClass
  * @return Decoder<mixed, T>
  */

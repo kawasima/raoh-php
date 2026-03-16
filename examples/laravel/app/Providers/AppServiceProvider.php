@@ -11,12 +11,12 @@ use App\Behavior\InstructProduction;
 use App\Behavior\SelectDeliveryProvider;
 use App\Gateway\CustomerRepository;
 use App\Gateway\DeliveryProviderGateway;
-use App\Gateway\InMemoryCustomerRepository;
-use App\Gateway\InMemoryOrderRepository;
-use App\Gateway\InMemoryProductRepository;
 use App\Gateway\OrderRepository;
 use App\Gateway\ProductRepository;
 use App\Gateway\StubDeliveryProviderGateway;
+use App\Infrastructure\DbCustomerRepository;
+use App\Infrastructure\DbOrderRepository;
+use App\Infrastructure\DbProductRepository;
 use App\Http\Decoders\OrderDecoders;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,10 +24,10 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Repositories (singletons so in-memory state persists within a request)
-        $this->app->singleton(ProductRepository::class, InMemoryProductRepository::class);
-        $this->app->singleton(CustomerRepository::class, InMemoryCustomerRepository::class);
-        $this->app->singleton(OrderRepository::class, InMemoryOrderRepository::class);
+        // Repositories
+        $this->app->singleton(ProductRepository::class, DbProductRepository::class);
+        $this->app->singleton(CustomerRepository::class, DbCustomerRepository::class);
+        $this->app->singleton(OrderRepository::class, DbOrderRepository::class);
         $this->app->singleton(DeliveryProviderGateway::class, StubDeliveryProviderGateway::class);
 
         // Behaviors

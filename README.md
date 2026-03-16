@@ -476,7 +476,7 @@ The `Decoders` class and boundary functions provide reusable combinators.
 - `Decoders::withDefault(Decoder $dec, mixed $default)` — fallback for missing/null-like failures
 - `Decoders::recover(Decoder $dec, mixed $fallback)` — fallback for any decoding failure
 - `Decoders::oneOf(Decoder ...$candidates)` — tries multiple candidates; returns `one_of_failed` if all fail
-- `enum_of(string $enumClass)` — matches backed enum values (case-sensitive)
+- `enum_of(string $enumClass)` — matches enum values; backed enums by value, pure enums by case name
 - `literal(mixed $value)` — matches one exact value
 
 ### `Decoders::strict(...)`

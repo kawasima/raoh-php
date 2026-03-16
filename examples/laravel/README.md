@@ -27,11 +27,12 @@ Business rules encoded as behavior classes:
 
 ```bash
 composer install
+php artisan migrate --seed
 php artisan serve
 ```
 
-No database is required. Products and customers are in-memory stubs. Orders are persisted
-across requests using Laravel's file cache.
+Uses SQLite by default. Migrations create the domain tables (customers, products, orders, order_items)
+and the seeder populates seed data.
 
 ## API
 
@@ -212,9 +213,9 @@ class AcceptDeliveryRequest
 ```php
 // app/Providers/AppServiceProvider.php
 
-$this->app->singleton(ProductRepository::class, InMemoryProductRepository::class);
-$this->app->singleton(CustomerRepository::class, InMemoryCustomerRepository::class);
-$this->app->singleton(OrderRepository::class, InMemoryOrderRepository::class);
+$this->app->singleton(ProductRepository::class, DbProductRepository::class);
+$this->app->singleton(CustomerRepository::class, DbCustomerRepository::class);
+$this->app->singleton(OrderRepository::class, DbOrderRepository::class);
 $this->app->singleton(DeliveryProviderGateway::class, StubDeliveryProviderGateway::class);
 
 $this->app->bind(OrderDecoders::class, fn($app) => new OrderDecoders(
@@ -223,5 +224,6 @@ $this->app->bind(OrderDecoders::class, fn($app) => new OrderDecoders(
 ));
 ```
 
-All dependencies are resolved via Laravel's container. Replacing `InMemory*` stubs with real
-database-backed implementations requires no changes to the controllers or decoders.
+All dependencies are resolved via Laravel's container. Repository implementations use
+Query Builder (`DB::table()`) and map rows to domain objects via raoh-php decoders,
+treating the database as just another boundary input source.
