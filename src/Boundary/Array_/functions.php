@@ -122,3 +122,9 @@ function literal(mixed $expected): Decoder
 {
     return ArrayDecoders::literal($expected);
 }
+
+/** @return Decoder<mixed, string> */
+function bytes(): Decoder
+{
+    return ArrayDecoders::bytes();
+}

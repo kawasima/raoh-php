@@ -33,7 +33,9 @@
         },
         "files": [
             "src/Boundary/Array_/functions.php",
-            "src/Boundary/Json/functions.php"
+            "src/Boundary/Array_/Encode/functions.php",
+            "src/Boundary/Json/functions.php",
+            "src/Boundary/Json/Encode/functions.php"
         ]
     },
     "autoload-dev": {

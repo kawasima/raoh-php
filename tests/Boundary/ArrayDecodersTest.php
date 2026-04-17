@@ -12,6 +12,7 @@ use Raoh\Present;
 use Raoh\PresentNull;
 
 use function Raoh\Boundary\Array_\bool_;
+use function Raoh\Boundary\Array_\bytes;
 use function Raoh\Boundary\Array_\combine;
 use function Raoh\Boundary\Array_\enum_of;
 use function Raoh\Boundary\Array_\field;
@@ -191,5 +192,29 @@ class ArrayDecodersTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         enum_of(\stdClass::class);
+    }
+
+    public function testBytesDecodesString(): void
+    {
+        $dec = bytes();
+        $r = $dec->decode("\x00\x01\x02");
+        $this->assertInstanceOf(Ok::class, $r);
+        $this->assertSame("\x00\x01\x02", $r->value);
+    }
+
+    public function testBytesFailsOnNull(): void
+    {
+        $dec = bytes();
+        $r = $dec->decode(null);
+        $this->assertInstanceOf(Err::class, $r);
+        $this->assertSame('required', $r->issues->toArray()[0]->code);
+    }
+
+    public function testBytesFailsOnNonString(): void
+    {
+        $dec = bytes();
+        $r = $dec->decode(42);
+        $this->assertInstanceOf(Err::class, $r);
+        $this->assertSame('type_mismatch', $r->issues->toArray()[0]->code);
     }
 }

@@ -32,18 +32,18 @@ final class DbOrderRepository implements OrderRepository
             default => 'created',
         };
 
+        $customerRow = RowEncoders::customer()->encode($baseOrder->customer);
         DB::table('orders')->insert([
             'id' => $id,
-            'customer_id' => $baseOrder->customer->customerId,
+            'customer_id' => $customerRow['id'],
             'status' => $status,
         ]);
 
+        $itemEncoder = RowEncoders::orderItem();
         foreach ($baseOrder->items as $item) {
-            DB::table('order_items')->insert([
-                'order_id' => $id,
-                'product_id' => $item->product->productId,
-                'quantity' => $item->quantity,
-            ]);
+            DB::table('order_items')->insert(
+                array_merge(['order_id' => $id], $itemEncoder->encode($item))
+            );
         }
 
         return $id;
