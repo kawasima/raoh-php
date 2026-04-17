@@ -17,12 +17,6 @@ final class CallableEncoder implements Encoder
     {
     }
 
-    /**
-     * @template TT
-     * @template OO
-     * @param callable(TT): OO $fn
-     * @return self<TT, OO>
-     */
     public static function of(callable $fn): self
     {
         return new self(\Closure::fromCallable($fn));
@@ -36,9 +30,9 @@ final class CallableEncoder implements Encoder
     /**
      * @template S
      * @param callable(S): T $f
-     * @return self<S, O>
+     * @return Encoder<S, O>
      */
-    public function contramap(callable $f): self
+    public function contramap(callable $f): Encoder
     {
         return self::of(fn(mixed $v): mixed => $this->encode($f($v)));
     }
@@ -46,9 +40,9 @@ final class CallableEncoder implements Encoder
     /**
      * @template P
      * @param Encoder<O, P> $next
-     * @return self<T, P>
+     * @return Encoder<T, P>
      */
-    public function andThen(Encoder $next): self
+    public function andThen(Encoder $next): Encoder
     {
         return self::of(fn(mixed $v): mixed => $next->encode($this->encode($v)));
     }
