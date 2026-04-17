@@ -7,10 +7,7 @@ namespace App\Infrastructure;
 use App\Domain\Customer;
 use App\Domain\OrderItem;
 use Raoh\Encoder;
-
-use function Raoh\Boundary\Array_\Encode\enum_of;
 use function Raoh\Boundary\Array_\Encode\int_;
-use function Raoh\Boundary\Array_\Encode\nested;
 use function Raoh\Boundary\Array_\Encode\object_;
 use function Raoh\Boundary\Array_\Encode\property;
 use function Raoh\Boundary\Array_\Encode\string_;

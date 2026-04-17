@@ -334,8 +334,8 @@ final class ArrayDecoders
                 return Result::fail(
                     $p,
                     ErrorCodes::TypeMismatch->value,
-                    'expected binary string',
-                    ['expected' => 'string', 'actual' => gettype($in)],
+                    'expected binary string (string)',
+                    ['expected' => 'binary string (string)', 'actual' => gettype($in)],
                 );
             }
             return Result::ok($in);
