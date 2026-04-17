@@ -45,6 +45,8 @@ src/
 ├── Decoder.php             # interface Decoder
 ├── DecoderTrait.php        # map / flatMap / pipe / asList defaults
 ├── CallableDecoder.php     # closure → Decoder adapter
+├── Encoder.php             # interface Encoder
+├── CallableEncoder.php     # closure → Encoder adapter
 ├── ErrorCodes.php          # enum ErrorCodes: string
 ├── Decoders.php            # utility: lazy / withDefault / recover / oneOf
 ├── StaticConstructor.php   # trait for first-class callable constructors
@@ -64,11 +66,15 @@ src/
 │
 └── Boundary/
     ├── Array_/
-    │   ├── functions.php       # use function imports
-    │   └── ArrayDecoders.php
+    │   ├── functions.php       # decoder use function imports
+    │   ├── ArrayDecoders.php
+    │   └── Encode/
+    │       └── functions.php   # encoder use function imports
     └── Json/
-        ├── functions.php
-        └── JsonDecoders.php
+        ├── functions.php       # decoder use function imports
+        ├── JsonDecoders.php
+        └── Encode/
+            └── functions.php   # encoder use function imports
 ```
 
 ## Core Model
@@ -126,6 +132,23 @@ Two boundary implementations are included:
 
 - `Raoh\Boundary\Array_` — PHP arrays and form data
 - `Raoh\Boundary\Json` — raw JSON strings
+
+### `Encoder`
+
+The symmetric counterpart to `Decoder` is:
+
+```php
+interface Encoder {
+    public function encode(mixed $value): mixed;
+    public function contramap(callable $f): Encoder;
+    public function andThen(Encoder $next): Encoder;
+}
+```
+
+An encoder converts a trusted domain object into an external representation (array, JSON string, etc.) and never fails.
+
+- `contramap($f)` — pre-process the input before encoding (useful for unwrapping value objects)
+- `andThen($next)` — post-process the output after encoding (useful for chaining transformations)
 
 ## What It Feels Like
 
@@ -580,7 +603,7 @@ For PHP arrays (form data, deserialized YAML, framework request objects, etc.):
 ```php
 use function Raoh\Boundary\Array_\{field, string_, int_, float_, bool_, combine,
     optional_field, optional_nullable_field, nullable, nested, list_of,
-    enum_of, literal};
+    enum_of, literal, bytes};
 ```
 
 ### `Raoh\Boundary\Json`
@@ -596,6 +619,64 @@ use function Raoh\Boundary\Json\{field, string_, int_, float_, bool_, combine,
 `from_json($dec)` wraps any decoder to accept a raw JSON string as input.
 
 Each module provides the same helper set (`string_()`, `field(...)`, `combine(...)`, etc.) adapted to its input type.
+
+### `Raoh\Boundary\Array_\Encode` (Encoder)
+
+Converts domain objects to PHP arrays suitable for DB inserts, framework responses, or further serialization:
+
+```php
+use function Raoh\Boundary\Array_\Encode\{string_, int_, float_, bool_,
+    date_, date_time_, enum_of, nullable, with_default,
+    property, object_, nested, list_};
+```
+
+| Function | Purpose |
+| -------- | ------- |
+| `string_()`, `int_()`, `float_()`, `bool_()` | Primitive pass-through encoders |
+| `date_()` | `DateTimeInterface` → `'Y-m-d'` string |
+| `date_time_()` | `DateTimeInterface` → ISO-8601 string |
+| `enum_of()` | `BackedEnum` → backing value; pure enum → case name |
+| `nullable($enc)` | Passes `null` through; delegates non-null to `$enc` |
+| `with_default($enc, $default)` | Encodes `$default` when input is `null` |
+| `property($key, $getter, $enc)` | Binds a map key, a getter, and a value encoder |
+| `object_(...$props)` | Domain object → `array<string, mixed>` |
+| `nested($enc)` | Marks an object encoder as a nested value (intent signal) |
+| `list_($enc)` | Encodes every element of a list |
+
+**Example — domain object to array:**
+
+```php
+use function Raoh\Boundary\Array_\Encode\{object_, property, string_, int_};
+
+$userEncoder = object_(
+    property('id',    fn(User $u): string => $u->id,    string_()),
+    property('email', fn(User $u): string => $u->email, string_()),
+    property('age',   fn(User $u): int    => $u->age,   int_()),
+);
+
+$row = $userEncoder->encode($user);
+// ['id' => '...', 'email' => '...', 'age' => 30]
+```
+
+**`contramap` — unwrapping value objects:**
+
+```php
+$idEncoder = string_()->contramap(fn(UserId $id): string => $id->value);
+```
+
+### `Raoh\Boundary\Json\Encode` (Encoder)
+
+Converts domain objects directly to a JSON string:
+
+```php
+use function Raoh\Boundary\Json\Encode\to_json;
+
+$encode = to_json($userEncoder);
+$json = $encode->encode($user);
+// '{"id":"...","email":"...","age":30}'
+```
+
+`to_json($enc)` returns an `Encoder<mixed, string>` and uses `JSON_THROW_ON_ERROR` so encoding failures throw a `\JsonException` rather than returning silently.
 
 ## Error Handling
 
