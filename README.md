@@ -611,14 +611,13 @@ use function Raoh\Boundary\Array_\{field, string_, int_, float_, bool_, combine,
 For raw JSON strings (HTTP bodies, webhook payloads, config files):
 
 ```php
-use function Raoh\Boundary\Json\{field, string_, int_, float_, bool_, combine,
-    optional_field, optional_nullable_field, nullable, nested, list_of,
-    enum_of, literal, from_json};
+use function Raoh\Boundary\Json\{from_json, field, string_, int_, float_, bool_, combine,
+    optional_field, nullable, nested, list_of};
 ```
 
-`from_json($dec)` wraps any decoder to accept a raw JSON string as input.
+`from_json($dec)` wraps any array decoder to accept a raw JSON string as input.
 
-Each module provides the same helper set (`string_()`, `field(...)`, `combine(...)`, etc.) adapted to its input type.
+The Json boundary exposes a subset of the Array_ helpers. `optional_nullable_field`, `enum_of`, `literal`, and `bytes` are available only in `Raoh\Boundary\Array_`; use them inside a `from_json()` decoder when you need them with JSON input.
 
 ### `Raoh\Boundary\Array_\Encode` (Encoder)
 
