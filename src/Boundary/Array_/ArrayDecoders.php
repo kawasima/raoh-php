@@ -322,6 +322,26 @@ final class ArrayDecoders
         });
     }
 
+    /** @return Decoder<mixed, string> */
+    public static function bytes(): Decoder
+    {
+        return CallableDecoder::of(function (mixed $in, ?Path $path = null): Result {
+            $p = $path ?? Path::root();
+            if ($in === null) {
+                return Result::fail($p, ErrorCodes::Required->value, 'is required');
+            }
+            if (!is_string($in)) {
+                return Result::fail(
+                    $p,
+                    ErrorCodes::TypeMismatch->value,
+                    'expected binary string',
+                    ['expected' => 'string', 'actual' => gettype($in)],
+                );
+            }
+            return Result::ok($in);
+        });
+    }
+
     /**
      * Match an exact literal value.
      *

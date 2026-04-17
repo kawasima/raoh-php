@@ -13,6 +13,7 @@ use App\Domain\DeliveryRequest;
 use App\Gateway\DeliveryProviderGateway;
 use App\Gateway\OrderRepository;
 use App\Http\Decoders\OrderDecoders;
+use App\Http\Encoders\OrderEncoders;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -111,7 +112,10 @@ class OrderController extends Controller
             assert($productionResult instanceof Ok);
             $orderId = $this->orderRepository->save($productionResult->value);
 
-            return response()->json(['orderId' => $orderId]);
+            return response()->json([
+                'orderId' => $orderId,
+                'order'   => OrderEncoders::order()->encode($productionResult->value->order),
+            ]);
         }
 
         // Step 3b: standard path — validate delivery constraints and schedule
@@ -141,6 +145,9 @@ class OrderController extends Controller
         assert($awaitingResult instanceof Ok);
         $orderId = $this->orderRepository->save($awaitingResult->value);
 
-        return response()->json(['orderId' => $orderId]);
+        return response()->json([
+            'orderId' => $orderId,
+            'order'   => OrderEncoders::order()->encode($awaitingResult->value->order),
+        ]);
     }
 }
