@@ -21,7 +21,7 @@ class EncodersTest extends TestCase
             property('name', fn(array $r): string => $r['name'], string_()),
         );
 
-        $json = to_json($enc)(['id' => 1, 'name' => 'Alice']);
+        $json = to_json($enc)->encode(['id' => 1, 'name' => 'Alice']);
         $this->assertSame('{"id":1,"name":"Alice"}', $json);
     }
 
@@ -31,7 +31,7 @@ class EncodersTest extends TestCase
             property('x', fn(array $r): int => $r['x'], int_()),
         );
 
-        $result = to_json($enc)(['x' => 42]);
+        $result = to_json($enc)->encode(['x' => 42]);
         $this->assertIsString($result);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Raoh\Boundary\Json\Encode;
 
+use Raoh\CallableEncoder;
 use Raoh\Encoder;
 
 /**
@@ -15,9 +16,11 @@ use Raoh\Encoder;
  * Wraps an array encoder to produce a JSON string.
  *
  * @param Encoder<mixed, array<mixed>> $enc
- * @return \Closure(mixed): string
+ * @return Encoder<mixed, string>
  */
-function to_json(Encoder $enc): \Closure
+function to_json(Encoder $enc): Encoder
 {
-    return fn(mixed $value): string => (string) json_encode($enc->encode($value));
+    return CallableEncoder::of(
+        fn(mixed $value): string => json_encode($enc->encode($value), JSON_THROW_ON_ERROR)
+    );
 }
