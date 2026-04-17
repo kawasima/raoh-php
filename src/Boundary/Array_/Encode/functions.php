@@ -49,7 +49,15 @@ function date_time_(): Encoder
     return CallableEncoder::of(fn(\DateTimeInterface $v): string => $v->format(\DateTimeInterface::ATOM));
 }
 
-/** @return Encoder<\UnitEnum, string|int> */
+/**
+ * Encodes a PHP enum to its backing value (BackedEnum) or case name (pure enum).
+ *
+ * Note: unlike the Decoder counterpart enum_of(string $enumClass), no class
+ * argument is required here — encoding cannot fail, so per-class type safety
+ * is unnecessary. The asymmetry in arity is intentional.
+ *
+ * @return Encoder<\UnitEnum, string|int>
+ */
 function enum_of(): Encoder
 {
     return CallableEncoder::of(function (\UnitEnum $v): string|int {
@@ -109,7 +117,11 @@ function object_(PropertyEncoder ...$props): Encoder
 }
 
 /**
- * Adapts an object encoder for use as a value encoder inside a parent object.
+ * Signals that an object encoder is used as a nested value inside a parent object.
+ *
+ * This is an identity function — no transformation is performed. It exists purely
+ * to mirror the decoder-side nested() at the call site and signal to readers that
+ * the encoder produces a structured sub-object, not a scalar value.
  *
  * @param Encoder<mixed, array<string, mixed>> $enc
  * @return Encoder<mixed, array<string, mixed>>
