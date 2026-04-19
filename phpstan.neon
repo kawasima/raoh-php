@@ -8,13 +8,9 @@ parameters:
         # Extracting to a named class would fix this but breaks the encapsulation of the internal implementation.
         - '#return type with generic interface Raoh\\FieldDecoder does not specify its types#'
         - '#Class AnonymousClass.* uses generic trait Raoh\\DecoderTrait but does not specify its types#'
-        - '#Method class@anonymous.* has parameter \$dec with generic interface Raoh\\Decoder but does not specify its types#'
         # CallableDecoder/CallableEncoder::of() return type: inferred from closure, specifying generics causes downstream mismatches
         - '#Method Raoh\\CallableDecoder::of\(\) return type with generic class Raoh\\CallableDecoder does not specify its types#'
         - '#Method Raoh\\CallableEncoder::of\(\) return type with generic class Raoh\\CallableEncoder does not specify its types#'
-        # Result::traverse return type: PHPDoc @template U on $values accumulator cannot be resolved by PHPStan
-        - '#Method Raoh\\Result::traverse\(\) should return Raoh\\Result<array<int, U>> but returns#'
-        # Combiner::strict passes Decoder<mixed,mixed> to Decoders::strict(); template I unresolvable at call site
-        - '#Unable to resolve the template type I in call to method static method Raoh\\Decoders::strict\(\)#'
-        # Issues::format() uses a reference-walk (&$current) pattern; PHPStan cannot track the array shape
-        - '#Call to function array_key_exists\(\) with .* and array\{\} will always evaluate to false#'
+
+includes:
+    - phpstan-baseline.neon
