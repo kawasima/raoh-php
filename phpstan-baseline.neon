@@ -1,0 +1,37 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Raoh\\FieldDecoder@anonymous/Boundary/Array_/ArrayDecoders\.php\:130\:\:__construct\(\) has parameter \$dec with generic interface Raoh\\Decoder but does not specify its types\: I, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Boundary/Array_/ArrayDecoders.php
+
+		-
+			message: '#^Unable to resolve the template type I in call to static method Raoh\\Decoders\:\:strict\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: src/Combinator/Combiner.php
+
+		-
+			message: '#^Method Raoh\\Result\:\:traverse\(\) should return Raoh\\Result\<list\<U\>\> but returns Raoh\\Err\<never\>\|Raoh\\Ok\<list\<mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Result.php
+
+		-
+			message: '#^PHPDoc tag @var with type Raoh\\Err\<T\> is not subtype of native type \$this\(Raoh\\Result\<T\>\)\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: src/Result.php
+
+		-
+			message: '#^PHPDoc tag @var with type Raoh\\Err\<U\> is not subtype of native type \$this\(Raoh\\Result\<T\>\)\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: src/Result.php
+
+		-
+			message: '#^Trait Raoh\\StaticConstructor is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/StaticConstructor.php
