@@ -1,5 +1,5 @@
 {
-    "name": "unit8/raoh",
+    "name": "raoh/raoh",
     "description": "Parse Don't Validate \u2014 composable decoder library for PHP 8.2+",
     "type": "library",
     "license": "Apache-2.0",
