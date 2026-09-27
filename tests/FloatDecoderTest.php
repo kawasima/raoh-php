@@ -6,6 +6,8 @@ namespace Raoh\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Raoh\Err;
+use Raoh\ErrorCodes;
+use Raoh\MessageKeys;
 use Raoh\Ok;
 
 use function Raoh\Boundary\Array_\float_;
@@ -45,7 +47,10 @@ class FloatDecoderTest extends TestCase
         $this->assertInstanceOf(Ok::class, float_()->min(0.0)->decode(0.0));
         $r = float_()->min(1.0)->decode(0.5);
         $this->assertInstanceOf(Err::class, $r);
-        $this->assertSame('too_small', $r->issues->toArray()[0]->code);
+        $issue = $r->issues->toArray()[0];
+        $this->assertSame(ErrorCodes::OutOfRange->value, $issue->code);
+        $this->assertSame(MessageKeys::OutOfRangeMinimum->value, $issue->messageKey);
+        $this->assertSame(['min' => 1.0, 'actual' => 0.5], $issue->meta);
     }
 
     public function testMax(): void
@@ -53,7 +58,10 @@ class FloatDecoderTest extends TestCase
         $this->assertInstanceOf(Ok::class, float_()->max(10.0)->decode(10.0));
         $r = float_()->max(10.0)->decode(10.1);
         $this->assertInstanceOf(Err::class, $r);
-        $this->assertSame('too_big', $r->issues->toArray()[0]->code);
+        $issue = $r->issues->toArray()[0];
+        $this->assertSame(ErrorCodes::OutOfRange->value, $issue->code);
+        $this->assertSame(MessageKeys::OutOfRangeMaximum->value, $issue->messageKey);
+        $this->assertSame(['max' => 10.0, 'actual' => 10.1], $issue->meta);
     }
 
     public function testRange(): void
@@ -61,7 +69,10 @@ class FloatDecoderTest extends TestCase
         $this->assertInstanceOf(Ok::class, float_()->range(0.0, 1.0)->decode(0.5));
         $r = float_()->range(0.0, 1.0)->decode(1.1);
         $this->assertInstanceOf(Err::class, $r);
-        $this->assertSame('out_of_range', $r->issues->toArray()[0]->code);
+        $issue = $r->issues->toArray()[0];
+        $this->assertSame(ErrorCodes::OutOfRange->value, $issue->code);
+        $this->assertSame(MessageKeys::OutOfRangeRange->value, $issue->messageKey);
+        $this->assertSame(['min' => 0.0, 'max' => 1.0, 'actual' => 1.1], $issue->meta);
     }
 
     public function testRangeInvertedThrows(): void
@@ -73,8 +84,23 @@ class FloatDecoderTest extends TestCase
     public function testPositive(): void
     {
         $this->assertInstanceOf(Ok::class, float_()->positive()->decode(0.1));
-        $this->assertInstanceOf(Err::class, float_()->positive()->decode(0.0));
+        $r = float_()->positive()->decode(0.0);
+        $this->assertInstanceOf(Err::class, $r);
+        $issue = $r->issues->toArray()[0];
+        $this->assertSame(ErrorCodes::OutOfRange->value, $issue->code);
+        $this->assertSame(MessageKeys::OutOfRangePositive->value, $issue->messageKey);
         $this->assertInstanceOf(Err::class, float_()->positive()->decode(-1.0));
+    }
+
+    public function testCustomMessageSurvivesResolve(): void
+    {
+        $r = float_()->positive('正の数にしてください')->decode(0.0);
+        $this->assertInstanceOf(Err::class, $r);
+        $issue = $r->issues->toArray()[0];
+        $this->assertTrue($issue->customMessage);
+        $this->assertSame('正の数にしてください', $issue->message);
+        $resolved = $issue->resolve(fn () => 'must be positive');
+        $this->assertSame('正の数にしてください', $resolved->message);
     }
 
     // -------------------------------------------------------------------------

@@ -40,7 +40,7 @@ src/
 ├── Ok.php                  # final readonly class Ok
 ├── Err.php                 # final readonly class Err
 ├── Path.php                # JSON Pointer path (immutable cons-list)
-├── Issue.php               # single error (path, code, message, meta)
+├── Issue.php               # single error (path, code, messageKey, message, meta)
 ├── Issues.php              # error collection (accumulation)
 ├── Decoder.php             # interface Decoder
 ├── DecoderTrait.php        # map / flatMap / pipe / asList defaults
@@ -48,6 +48,7 @@ src/
 ├── Encoder.php             # interface Encoder
 ├── CallableEncoder.php     # closure → Encoder adapter
 ├── ErrorCodes.php          # enum ErrorCodes: string
+├── MessageKeys.php         # enum MessageKeys: string — refines a code into its failing constraint
 ├── Decoders.php            # utility: lazy / withDefault / recover / oneOf
 ├── StaticConstructor.php   # trait for first-class callable constructors
 ├── Presence.php            # tri-state presence base

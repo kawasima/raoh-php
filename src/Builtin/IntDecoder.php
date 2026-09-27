@@ -7,6 +7,7 @@ namespace Raoh\Builtin;
 use Raoh\Decoder;
 use Raoh\DecoderTrait;
 use Raoh\ErrorCodes;
+use Raoh\MessageKeys;
 use Raoh\Path;
 use Raoh\Result;
 
@@ -33,10 +34,12 @@ final class IntDecoder implements Decoder
     {
         return new static($this->chain(function (int $v, Path $p) use ($n, $message): Result {
             if ($v < $n) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
-                    ErrorCodes::TooSmall->value,
-                    $message ?? "must be at least {$n}",
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangeMinimum->value,
+                    $message,
+                    "must be at least {$n}",
                     ['min' => $n, 'actual' => $v],
                 );
             }
@@ -48,10 +51,12 @@ final class IntDecoder implements Decoder
     {
         return new static($this->chain(function (int $v, Path $p) use ($n, $message): Result {
             if ($v > $n) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
-                    ErrorCodes::TooBig->value,
-                    $message ?? "must be at most {$n}",
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangeMaximum->value,
+                    $message,
+                    "must be at most {$n}",
                     ['max' => $n, 'actual' => $v],
                 );
             }
@@ -66,10 +71,12 @@ final class IntDecoder implements Decoder
         }
         return new static($this->chain(function (int $v, Path $p) use ($min, $max, $message): Result {
             if ($v < $min || $v > $max) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::OutOfRange->value,
-                    $message ?? "must be between {$min} and {$max}",
+                    MessageKeys::OutOfRangeRange->value,
+                    $message,
+                    "must be between {$min} and {$max}",
                     ['min' => $min, 'max' => $max, 'actual' => $v],
                 );
             }
@@ -81,7 +88,14 @@ final class IntDecoder implements Decoder
     {
         return new static($this->chain(function (int $v, Path $p) use ($message): Result {
             if ($v <= 0) {
-                return Result::fail($p, ErrorCodes::TooSmall->value, $message ?? 'must be positive', ['actual' => $v]);
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangePositive->value,
+                    $message,
+                    'must be positive',
+                    ['actual' => $v],
+                );
             }
             return Result::ok($v);
         }));
@@ -91,7 +105,14 @@ final class IntDecoder implements Decoder
     {
         return new static($this->chain(function (int $v, Path $p) use ($message): Result {
             if ($v >= 0) {
-                return Result::fail($p, ErrorCodes::TooBig->value, $message ?? 'must be negative', ['actual' => $v]);
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangeNegative->value,
+                    $message,
+                    'must be negative',
+                    ['actual' => $v],
+                );
             }
             return Result::ok($v);
         }));
@@ -101,7 +122,14 @@ final class IntDecoder implements Decoder
     {
         return new static($this->chain(function (int $v, Path $p) use ($message): Result {
             if ($v < 0) {
-                return Result::fail($p, ErrorCodes::TooSmall->value, $message ?? 'must be non-negative', ['actual' => $v]);
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangeNonNegative->value,
+                    $message,
+                    'must be non-negative',
+                    ['actual' => $v],
+                );
             }
             return Result::ok($v);
         }));
@@ -111,7 +139,14 @@ final class IntDecoder implements Decoder
     {
         return new static($this->chain(function (int $v, Path $p) use ($message): Result {
             if ($v > 0) {
-                return Result::fail($p, ErrorCodes::TooBig->value, $message ?? 'must be non-positive', ['actual' => $v]);
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangeNonPositive->value,
+                    $message,
+                    'must be non-positive',
+                    ['actual' => $v],
+                );
             }
             return Result::ok($v);
         }));
@@ -121,10 +156,12 @@ final class IntDecoder implements Decoder
     {
         return new static($this->chain(function (int $v, Path $p) use ($divisor, $message): Result {
             if ($v % $divisor !== 0) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::NotMultipleOf->value,
-                    $message ?? "must be a multiple of {$divisor}",
+                    ErrorCodes::NotMultipleOf->value,
+                    $message,
+                    "must be a multiple of {$divisor}",
                     ['divisor' => $divisor, 'actual' => $v],
                 );
             }
@@ -139,10 +176,12 @@ final class IntDecoder implements Decoder
     {
         return new static($this->chain(function (int $v, Path $p) use ($allowed, $message): Result {
             if (!in_array($v, $allowed, true)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidValue->value,
-                    $message ?? 'invalid value',
+                    ErrorCodes::InvalidValue->value,
+                    $message,
+                    'invalid value',
                     ['allowed' => $allowed, 'actual' => $v],
                 );
             }

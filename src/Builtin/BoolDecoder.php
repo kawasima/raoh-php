@@ -33,7 +33,13 @@ final class BoolDecoder implements Decoder
     {
         return new static($this->chain(function (bool $v, Path $p) use ($message): Result {
             if (!$v) {
-                return Result::fail($p, ErrorCodes::InvalidValue->value, $message ?? 'must be true');
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::InvalidValue->value,
+                    ErrorCodes::InvalidValue->value,
+                    $message,
+                    'must be true',
+                );
             }
             return Result::ok($v);
         }));
@@ -43,7 +49,13 @@ final class BoolDecoder implements Decoder
     {
         return new static($this->chain(function (bool $v, Path $p) use ($message): Result {
             if ($v) {
-                return Result::fail($p, ErrorCodes::InvalidValue->value, $message ?? 'must be false');
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::InvalidValue->value,
+                    ErrorCodes::InvalidValue->value,
+                    $message,
+                    'must be false',
+                );
             }
             return Result::ok($v);
         }));

@@ -105,15 +105,16 @@ final class Issues
     }
 
     /**
-     * @return list<array{path: string, code: string, message: string, meta: array<string, mixed>}>
+     * @return list<array{path: string, code: string, messageKey: string, message: string, meta: array<string, mixed>}>
      */
     public function toJsonList(): array
     {
         return array_map(fn (Issue $i) => [
-            'path'    => $i->path->toJsonPointer(),
-            'code'    => $i->code,
-            'message' => $i->message,
-            'meta'    => $i->meta,
+            'path'       => $i->path->toJsonPointer(),
+            'code'       => $i->code,
+            'messageKey' => $i->messageKey,
+            'message'    => $i->message,
+            'meta'       => $i->meta,
         ], $this->items);
     }
 }
