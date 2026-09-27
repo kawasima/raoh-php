@@ -46,5 +46,10 @@
     "scripts": {
         "test": "phpunit",
         "analyse": "./vendor/bin/phpstan analyse --memory-limit=512M"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "0.8.x-dev"
+        }
     }
 }

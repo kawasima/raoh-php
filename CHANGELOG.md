@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Targets version parity with [kawasima/raoh](https://github.com/kawasima/raoh) 0.8.0. So far this
+covers error-reporting semantics only (`code` taxonomy, `messageKey`, resolver fallback — closing
+[#7](https://github.com/kawasima/raoh-php/issues/7)); the rest of 0.8.0 (Unicode whitespace
+folding, URL/IP grammar, temporal parsing) is tracked separately. Available ahead of a tagged
+`0.8.0` release via `composer require raoh/raoh:0.8.x-dev`, aliased from the `develop` branch.
+
 ### Added
 
 - `Issue::$messageKey`, refining `code` into the specific constraint that failed (defaults to `code`, preserved by `rebase()` and `withCustomMessage()`)
