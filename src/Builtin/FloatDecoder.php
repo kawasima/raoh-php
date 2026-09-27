@@ -7,6 +7,7 @@ namespace Raoh\Builtin;
 use Raoh\Decoder;
 use Raoh\DecoderTrait;
 use Raoh\ErrorCodes;
+use Raoh\MessageKeys;
 use Raoh\Path;
 use Raoh\Result;
 
@@ -33,10 +34,12 @@ final class FloatDecoder implements Decoder
     {
         return new static($this->chain(function (float $v, Path $p) use ($n, $message): Result {
             if ($v < $n) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
-                    ErrorCodes::TooSmall->value,
-                    $message ?? "must be at least {$n}",
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangeMinimum->value,
+                    $message,
+                    "must be at least {$n}",
                     ['min' => $n, 'actual' => $v],
                 );
             }
@@ -48,10 +51,12 @@ final class FloatDecoder implements Decoder
     {
         return new static($this->chain(function (float $v, Path $p) use ($n, $message): Result {
             if ($v > $n) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
-                    ErrorCodes::TooBig->value,
-                    $message ?? "must be at most {$n}",
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangeMaximum->value,
+                    $message,
+                    "must be at most {$n}",
                     ['max' => $n, 'actual' => $v],
                 );
             }
@@ -66,10 +71,12 @@ final class FloatDecoder implements Decoder
         }
         return new static($this->chain(function (float $v, Path $p) use ($min, $max, $message): Result {
             if ($v < $min || $v > $max) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::OutOfRange->value,
-                    $message ?? "must be between {$min} and {$max}",
+                    MessageKeys::OutOfRangeRange->value,
+                    $message,
+                    "must be between {$min} and {$max}",
                     ['min' => $min, 'max' => $max, 'actual' => $v],
                 );
             }
@@ -81,7 +88,14 @@ final class FloatDecoder implements Decoder
     {
         return new static($this->chain(function (float $v, Path $p) use ($message): Result {
             if ($v <= 0.0) {
-                return Result::fail($p, ErrorCodes::TooSmall->value, $message ?? 'must be positive', ['actual' => $v]);
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::OutOfRange->value,
+                    MessageKeys::OutOfRangePositive->value,
+                    $message,
+                    'must be positive',
+                    ['actual' => $v],
+                );
             }
             return Result::ok($v);
         }));
@@ -99,10 +113,12 @@ final class FloatDecoder implements Decoder
             $parts = explode('.', $str);
             $actualScale = isset($parts[1]) ? strlen($parts[1]) : 0;
             if ($actualScale > $maxScale) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidScale->value,
-                    $message ?? "must have at most {$maxScale} decimal places",
+                    ErrorCodes::InvalidScale->value,
+                    $message,
+                    "must have at most {$maxScale} decimal places",
                     ['maxScale' => $maxScale, 'actual' => $actualScale],
                 );
             }

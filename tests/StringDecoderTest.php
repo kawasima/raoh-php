@@ -6,6 +6,8 @@ namespace Raoh\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Raoh\Err;
+use Raoh\ErrorCodes;
+use Raoh\MessageKeys;
 use Raoh\Ok;
 
 use function Raoh\Boundary\Array_\string_;
@@ -84,7 +86,18 @@ class StringDecoderTest extends TestCase
     {
         $r = string_()->email()->decode('not-an-email');
         $this->assertInstanceOf(Err::class, $r);
-        $this->assertSame('invalid_format', $r->issues->toArray()[0]->code);
+        $issue = $r->issues->toArray()[0];
+        $this->assertSame(ErrorCodes::InvalidFormat->value, $issue->code);
+        $this->assertSame(MessageKeys::InvalidFormatEmail->value, $issue->messageKey);
+    }
+
+    public function testEmailCustomMessageSurvivesResolve(): void
+    {
+        $r = string_()->email('メールアドレスの形式が不正です')->decode('not-an-email');
+        $issue = $r->issues->toArray()[0];
+        $this->assertTrue($issue->customMessage);
+        $resolved = $issue->resolve(fn () => 'resolver output');
+        $this->assertSame('メールアドレスの形式が不正です', $resolved->message);
     }
 
     public function testChaining(): void
@@ -102,6 +115,9 @@ class StringDecoderTest extends TestCase
 
         $r2 = string_()->pattern('/^\d{3}-\d{4}$/')->decode('invalid');
         $this->assertInstanceOf(Err::class, $r2);
+        // pattern() keeps the plain code as its messageKey: the regex it carries
+        // is not something a shared message catalog can turn into a sentence.
+        $this->assertSame(ErrorCodes::InvalidFormat->value, $r2->issues->toArray()[0]->messageKey);
     }
 
     public function testUuid(): void
@@ -111,6 +127,73 @@ class StringDecoderTest extends TestCase
 
         $r2 = string_()->uuid()->decode('not-a-uuid');
         $this->assertInstanceOf(Err::class, $r2);
+        $issue = $r2->issues->toArray()[0];
+        $this->assertSame(ErrorCodes::InvalidFormat->value, $issue->code);
+        $this->assertSame(MessageKeys::InvalidFormatUuid->value, $issue->messageKey);
+    }
+
+    public function testUlid(): void
+    {
+        $r = string_()->ulid()->decode('01ARZ3NDEKTSV4RRFFQ69G5FAV');
+        $this->assertInstanceOf(Ok::class, $r);
+
+        $r2 = string_()->ulid()->decode('not-a-ulid');
+        $this->assertInstanceOf(Err::class, $r2);
+        $this->assertSame(MessageKeys::InvalidFormatUlid->value, $r2->issues->toArray()[0]->messageKey);
+    }
+
+    public function testIp(): void
+    {
+        $this->assertInstanceOf(Ok::class, string_()->ip()->decode('127.0.0.1'));
+        $r = string_()->ip()->decode('not-an-ip');
+        $this->assertInstanceOf(Err::class, $r);
+        $this->assertSame(MessageKeys::InvalidFormatIp->value, $r->issues->toArray()[0]->messageKey);
+    }
+
+    public function testIpv4(): void
+    {
+        $this->assertInstanceOf(Ok::class, string_()->ipv4()->decode('127.0.0.1'));
+        $r = string_()->ipv4()->decode('::1');
+        $this->assertInstanceOf(Err::class, $r);
+        $this->assertSame(MessageKeys::InvalidFormatIpv4->value, $r->issues->toArray()[0]->messageKey);
+    }
+
+    public function testIpv6(): void
+    {
+        $this->assertInstanceOf(Ok::class, string_()->ipv6()->decode('::1'));
+        $r = string_()->ipv6()->decode('127.0.0.1');
+        $this->assertInstanceOf(Err::class, $r);
+        $this->assertSame(MessageKeys::InvalidFormatIpv6->value, $r->issues->toArray()[0]->messageKey);
+    }
+
+    public function testStartsWith(): void
+    {
+        $this->assertInstanceOf(Ok::class, string_()->startsWith('foo')->decode('foobar'));
+        $r = string_()->startsWith('foo')->decode('barfoo');
+        $this->assertInstanceOf(Err::class, $r);
+        $issue = $r->issues->toArray()[0];
+        $this->assertSame(MessageKeys::InvalidFormatStartsWith->value, $issue->messageKey);
+        $this->assertSame(['prefix' => 'foo'], $issue->meta);
+    }
+
+    public function testEndsWith(): void
+    {
+        $this->assertInstanceOf(Ok::class, string_()->endsWith('bar')->decode('foobar'));
+        $r = string_()->endsWith('bar')->decode('barfoo');
+        $this->assertInstanceOf(Err::class, $r);
+        $issue = $r->issues->toArray()[0];
+        $this->assertSame(MessageKeys::InvalidFormatEndsWith->value, $issue->messageKey);
+        $this->assertSame(['suffix' => 'bar'], $issue->meta);
+    }
+
+    public function testIncludes(): void
+    {
+        $this->assertInstanceOf(Ok::class, string_()->includes('oob')->decode('foobar'));
+        $r = string_()->includes('xyz')->decode('foobar');
+        $this->assertInstanceOf(Err::class, $r);
+        $issue = $r->issues->toArray()[0];
+        $this->assertSame(MessageKeys::InvalidFormatIncludes->value, $issue->messageKey);
+        $this->assertSame(['substring' => 'xyz'], $issue->meta);
     }
 
     public function testToInt(): void

@@ -105,6 +105,12 @@ final class Issues
     }
 
     /**
+     * Converts issues to a list of maps suitable for JSON serialization.
+     *
+     * Deliberately excludes `messageKey`, matching kawasima/raoh's `Issues.toJsonList()`:
+     * `messageKey` refines `code` for the message resolver and is not part of the
+     * cross-language JSON API contract. Read it from `Issue::$messageKey` directly.
+     *
      * @return list<array{path: string, code: string, message: string, meta: array<string, mixed>}>
      */
     public function toJsonList(): array

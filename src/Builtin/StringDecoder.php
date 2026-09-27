@@ -8,6 +8,7 @@ use Raoh\CallableDecoder;
 use Raoh\Decoder;
 use Raoh\DecoderTrait;
 use Raoh\ErrorCodes;
+use Raoh\MessageKeys;
 use Raoh\Path;
 use Raoh\Result;
 
@@ -66,7 +67,13 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($message): Result {
             if (trim($v) === '') {
-                return Result::fail($p, ErrorCodes::Blank->value, $message ?? 'must not be blank');
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::Blank->value,
+                    ErrorCodes::Blank->value,
+                    $message,
+                    'must not be blank',
+                );
             }
             return Result::ok($v);
         }));
@@ -85,10 +92,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($n, $message): Result {
             if (mb_strlen($v) < $n) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::TooShort->value,
-                    $message ?? "must be at least {$n} characters",
+                    ErrorCodes::TooShort->value,
+                    $message,
+                    "must be at least {$n} characters",
                     ['min' => $n, 'actual' => mb_strlen($v)],
                 );
             }
@@ -100,10 +109,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($n, $message): Result {
             if (mb_strlen($v) > $n) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::TooLong->value,
-                    $message ?? "must be at most {$n} characters",
+                    ErrorCodes::TooLong->value,
+                    $message,
+                    "must be at most {$n} characters",
                     ['max' => $n, 'actual' => mb_strlen($v)],
                 );
             }
@@ -115,10 +126,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($n, $message): Result {
             if (mb_strlen($v) !== $n) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidLength->value,
-                    $message ?? "must be exactly {$n} characters",
+                    ErrorCodes::InvalidLength->value,
+                    $message,
+                    "must be exactly {$n} characters",
                     ['length' => $n, 'actual' => mb_strlen($v)],
                 );
             }
@@ -138,10 +151,12 @@ final class StringDecoder implements Decoder
         }
         return new static($this->chain(function (string $v, Path $p) use ($regex, $code, $message): Result {
             if (!preg_match($regex, $v)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     $code,
-                    $message ?? 'invalid format',
+                    $code,
+                    $message,
+                    'invalid format',
                     ['pattern' => $regex],
                 );
             }
@@ -153,10 +168,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($prefix, $message): Result {
             if (!str_starts_with($v, $prefix)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? "must start with '{$prefix}'",
+                    MessageKeys::InvalidFormatStartsWith->value,
+                    $message,
+                    "must start with '{$prefix}'",
                     ['prefix' => $prefix],
                 );
             }
@@ -168,10 +185,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($suffix, $message): Result {
             if (!str_ends_with($v, $suffix)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? "must end with '{$suffix}'",
+                    MessageKeys::InvalidFormatEndsWith->value,
+                    $message,
+                    "must end with '{$suffix}'",
                     ['suffix' => $suffix],
                 );
             }
@@ -183,10 +202,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($substring, $message): Result {
             if (!str_contains($v, $substring)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? "must include '{$substring}'",
+                    MessageKeys::InvalidFormatIncludes->value,
+                    $message,
+                    "must include '{$substring}'",
                     ['substring' => $substring],
                 );
             }
@@ -201,10 +222,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($allowed, $message): Result {
             if (!in_array($v, $allowed, true)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidValue->value,
-                    $message ?? 'invalid value',
+                    ErrorCodes::InvalidValue->value,
+                    $message,
+                    'invalid value',
                     ['allowed' => $allowed, 'actual' => $v],
                 );
             }
@@ -220,10 +243,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($message): Result {
             if (!filter_var($v, FILTER_VALIDATE_EMAIL) || mb_strlen($v) > 254) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? 'not a valid email address',
+                    MessageKeys::InvalidFormatEmail->value,
+                    $message,
+                    'not a valid email address',
                 );
             }
             return Result::ok($v);
@@ -234,23 +259,43 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($message): Result {
             if (!filter_var($v, FILTER_VALIDATE_URL)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? 'not a valid URL',
+                    MessageKeys::InvalidFormatUrl->value,
+                    $message,
+                    'not a valid URL',
                 );
             }
             $parsed = parse_url($v);
             if (!is_array($parsed)) {
-                return Result::fail($p, ErrorCodes::InvalidFormat->value, $message ?? 'not a valid URL');
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::InvalidFormat->value,
+                    MessageKeys::InvalidFormatUrl->value,
+                    $message,
+                    'not a valid URL',
+                );
             }
             $scheme = $parsed['scheme'] ?? null;
             if (!in_array($scheme, ['http', 'https'], true)) {
-                return Result::fail($p, ErrorCodes::InvalidFormat->value, $message ?? 'not a valid URL');
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::InvalidFormat->value,
+                    MessageKeys::InvalidFormatUrl->value,
+                    $message,
+                    'not a valid URL',
+                );
             }
             $port = isset($parsed['port']) ? (int) $parsed['port'] : null;
             if ($port !== null && ($port < 1 || $port > 65535)) {
-                return Result::fail($p, ErrorCodes::InvalidFormat->value, $message ?? 'not a valid URL');
+                return Result::failWith(
+                    $p,
+                    ErrorCodes::InvalidFormat->value,
+                    MessageKeys::InvalidFormatUrl->value,
+                    $message,
+                    'not a valid URL',
+                );
             }
             return Result::ok($v);
         }));
@@ -260,10 +305,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($message): Result {
             if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $v)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? 'not a valid UUID',
+                    MessageKeys::InvalidFormatUuid->value,
+                    $message,
+                    'not a valid UUID',
                 );
             }
             return Result::ok($v);
@@ -274,10 +321,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($message): Result {
             if (!preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/', $v)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? 'not a valid ULID',
+                    MessageKeys::InvalidFormatUlid->value,
+                    $message,
+                    'not a valid ULID',
                 );
             }
             return Result::ok($v);
@@ -288,10 +337,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($message): Result {
             if (!filter_var($v, FILTER_VALIDATE_IP)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? 'not a valid IP address',
+                    MessageKeys::InvalidFormatIp->value,
+                    $message,
+                    'not a valid IP address',
                 );
             }
             return Result::ok($v);
@@ -302,10 +353,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($message): Result {
             if (!filter_var($v, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? 'not a valid IPv4 address',
+                    MessageKeys::InvalidFormatIpv4->value,
+                    $message,
+                    'not a valid IPv4 address',
                 );
             }
             return Result::ok($v);
@@ -316,10 +369,12 @@ final class StringDecoder implements Decoder
     {
         return new static($this->chain(function (string $v, Path $p) use ($message): Result {
             if (!filter_var($v, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-                return Result::fail(
+                return Result::failWith(
                     $p,
                     ErrorCodes::InvalidFormat->value,
-                    $message ?? 'not a valid IPv6 address',
+                    MessageKeys::InvalidFormatIpv6->value,
+                    $message,
+                    'not a valid IPv6 address',
                 );
             }
             return Result::ok($v);
@@ -339,10 +394,12 @@ final class StringDecoder implements Decoder
                     function (string $v) use ($path, $message): Result {
                         $p = $path ?? Path::root();
                         if (!is_numeric($v) || str_contains($v, '.')) {
-                            return Result::fail(
+                            return Result::failWith(
                                 $p,
                                 ErrorCodes::TypeMismatch->value,
-                                $message ?? 'expected integer',
+                                ErrorCodes::TypeMismatch->value,
+                                $message,
+                                'expected integer',
                                 ['expected' => 'integer'],
                             );
                         }
@@ -362,10 +419,12 @@ final class StringDecoder implements Decoder
                     function (string $v) use ($path, $message): Result {
                         $p = $path ?? Path::root();
                         if (!is_numeric($v)) {
-                            return Result::fail(
+                            return Result::failWith(
                                 $p,
                                 ErrorCodes::TypeMismatch->value,
-                                $message ?? 'expected number',
+                                ErrorCodes::TypeMismatch->value,
+                                $message,
+                                'expected number',
                                 ['expected' => 'float'],
                             );
                         }
@@ -390,10 +449,12 @@ final class StringDecoder implements Decoder
                             default                    => null,
                         };
                         if ($parsed === null) {
-                            return Result::fail(
+                            return Result::failWith(
                                 $p,
                                 ErrorCodes::TypeMismatch->value,
-                                $message ?? 'expected boolean',
+                                ErrorCodes::TypeMismatch->value,
+                                $message,
+                                'expected boolean',
                                 ['expected' => 'boolean'],
                             );
                         }
@@ -414,10 +475,14 @@ final class StringDecoder implements Decoder
                         $p = $path ?? Path::root();
                         $date = \DateTimeImmutable::createFromFormat($format, $v);
                         if ($date === false || $date->format($format) !== $v) {
-                            return Result::fail(
+                            // PHP-specific date parsing, not Raoh's ISO-8601 date() — kept on
+                            // the plain invalid_format key, not invalid_format.date.
+                            return Result::failWith(
                                 $p,
                                 ErrorCodes::InvalidFormat->value,
-                                $message ?? "expected date in format {$format}",
+                                ErrorCodes::InvalidFormat->value,
+                                $message,
+                                "expected date in format {$format}",
                                 ['format' => $format],
                             );
                         }
