@@ -49,7 +49,7 @@ class IssuesTest extends TestCase
         $this->assertCount(1, $list);
         $this->assertSame('/email', $list[0]['path']);
         $this->assertSame('invalid_format', $list[0]['code']);
-        $this->assertSame('invalid_format', $list[0]['messageKey']);
+        $this->assertArrayNotHasKey('messageKey', $list[0]);
         $this->assertSame('bad email', $list[0]['message']);
         $this->assertSame(['detail' => 'x'], $list[0]['meta']);
     }
